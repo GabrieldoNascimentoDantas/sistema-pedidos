@@ -1,5 +1,6 @@
 using SistemaPedidos.Models;
 using SistemaPedidos.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SistemaPedidos.Services;
 
@@ -50,6 +51,8 @@ public class FuncionarioService
         using var db = new AppDbContext();
         var hoje = DateTime.Today;
         var pedidosHoje = db.Pedidos
+            .Include(p => p.Cliente)
+            .Include(p => p.Itens)
             .Where(p => p.DataHora.Date == hoje)
             .OrderByDescending(p => p.DataHora)
             .ToList();
@@ -90,13 +93,17 @@ public class FuncionarioService
                 Console.WriteLine($"├─ Desconto ({pedido.CupomDesconto} -{pedido.PercentualDesconto}%): -{pedido.ValorDesconto:C}");
             
             Console.WriteLine($"└─ Total: {pedido.Total:C}");
-            totalDia += pedido.Total;
+            
+            // Apenas soma no faturamento se o pedido foi entregue
+            if (pedido.Status == "Entregue")
+                totalDia += pedido.Total;
         }
 
         Console.WriteLine("\n═══════════════════════════════════════════════════════════════");
         Console.WriteLine($"  Total de Pedidos: {pedidosHoje.Count}");
+        Console.WriteLine($"  Pedidos Entregues: {pedidosHoje.Count(p => p.Status == "Entregue")}");
         Console.WriteLine($"  Total de Itens: {totalItens}");
-        Console.WriteLine($"  FATURAMENTO DO DIA: {totalDia:C}");
+        Console.WriteLine($"  FATURAMENTO DO DIA (apenas entregues): {totalDia:C}");
         Console.WriteLine("═══════════════════════════════════════════════════════════════\n");
     }
 
@@ -163,7 +170,11 @@ public class FuncionarioService
             return;
         }
 
-        var pedidos = db.Pedidos.Where(p => p.ClienteId == cliente.Id).OrderByDescending(p => p.DataHora).ToList();
+        var pedidos = db.Pedidos
+            .Include(p => p.Itens)
+            .Where(p => p.ClienteId == cliente.Id)
+            .OrderByDescending(p => p.DataHora)
+            .ToList();
 
         if (pedidos.Count == 0)
         {
