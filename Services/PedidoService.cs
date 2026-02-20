@@ -54,5 +54,70 @@ public class PedidoService
             Console.WriteLine("✘ Cupom inválido.");
     }
 
-    public void FinalizarPedido() => _pedidoAtual.ExibirResumo();
+    public void ColetarDadosCliente()
+    {
+        Console.WriteLine("\n===== DADOS DO CLIENTE =====");
+
+        string nome = ColetarNome();
+        string telefone = ColetarTelefone();
+        string endereco = ColetarEndereco();
+
+        _pedidoAtual.Cliente = new Cliente(nome, endereco, telefone);
+        Console.WriteLine("✔ Dados salvos!");
+}
+
+    private string ColetarNome()
+    {
+        while (true)
+        {
+            Console.Write("Nome (mínimo 5 caracteres): ");
+            string nome = Console.ReadLine()!.Trim();
+            if (nome.Length >= 5)
+                return nome;
+            Console.WriteLine("✘ Nome muito curto, tente novamente.");
+        }
+    }
+
+    private string ColetarTelefone()
+    {
+        while (true)
+        {
+            Console.Write("Telefone (DDD + 9 dígitos, ex: 11987654321): ");
+            string telefone = Console.ReadLine()!.Trim();
+            if (telefone.Length == 11 && telefone.All(char.IsDigit))
+                return telefone;
+            Console.WriteLine("✘ Telefone inválido, tente novamente.");
+        }
+}
+
+    private string ColetarEndereco()
+    {
+        while (true)
+        {
+            Console.WriteLine("Endereço (Rua, Número, Bairro, Apartamento):");
+            Console.Write("> ");
+            string endereco = Console.ReadLine()!.Trim();
+            if (endereco.Length >= 10)
+                return endereco;
+            Console.WriteLine("✘ Endereço muito curto, tente novamente.");
+        }
+}
+
+            public bool FinalizarPedido()
+    {
+        if (_pedidoAtual.Itens.Count == 0)
+        {
+            Console.WriteLine("✘ Adicione pelo menos um item antes de finalizar!");
+            return false;
+        }
+
+        if (_pedidoAtual.Cliente == null)
+        {
+            Console.WriteLine("⚠ Informe os dados do cliente antes de finalizar!\n");
+            ColetarDadosCliente();
+        }
+
+        _pedidoAtual.ExibirResumo();
+        return true;
+    }
 }

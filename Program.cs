@@ -34,10 +34,9 @@ while (executando)
             break;
 
         case "4":
-            service.FinalizarPedido();
+            if (service.FinalizarPedido())
             executando = false;
             break;
-
         case "0":
             executando = false;
             break;

@@ -3,6 +3,8 @@ namespace SistemaPedidos.Models;
 public class Pedido
 {
     public int Id { get; set; }
+
+    public Cliente? Cliente { get; set; } 
     public List<ItemPedido> Itens { get; set; } = new();
     public string? CupomDesconto { get; set; }
     public decimal PercentualDesconto { get; private set; }
@@ -33,6 +35,14 @@ public class Pedido
     public void ExibirResumo()
     {
         Console.WriteLine("\n===== RESUMO DO PEDIDO =====");
+          if (Cliente != null)
+    {
+        Console.WriteLine($"  Cliente:  {Cliente.Nome}");
+        Console.WriteLine($"  Endereço: {Cliente.Endereco}");
+        Console.WriteLine($"  Telefone: {Cliente.Telefone}");
+        Console.WriteLine();
+    }
+
         foreach (var item in Itens)
             Console.WriteLine($"  {item.Quantidade}x {item.Produto.Nome} = {item.Subtotal:C}");
 
