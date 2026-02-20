@@ -3,8 +3,8 @@ namespace SistemaPedidos.Models;
 public class Pedido
 {
     public int Id { get; set; }
-
-    public Cliente? Cliente { get; set; } 
+    public int ClienteId { get; set; }  
+    public Cliente? Cliente { get; set; }  
     public List<ItemPedido> Itens { get; set; } = new();
     public string? CupomDesconto { get; set; }
     public decimal PercentualDesconto { get; private set; }
@@ -44,7 +44,7 @@ public class Pedido
     }
 
         foreach (var item in Itens)
-            Console.WriteLine($"  {item.Quantidade}x {item.Produto.Nome} = {item.Subtotal:C}");
+            Console.WriteLine($"  {item.Quantidade}x {item.NomeProduto} = {item.Subtotal:C}");
 
         Console.WriteLine($"\n  Subtotal:  {Subtotal:C}");
 

@@ -2,14 +2,19 @@ namespace SistemaPedidos.Models;
 
 public class Cliente
 {
-    public string Nome { get; set; }
-    public string Endereco { get; set; }
-    public string Telefone { get; set; }
+    public int Id { get; set; }
+    public string Nome { get; set; } = null!;
+    public string Telefone { get; set; } = null!;
+    public string Endereco { get; set; } = null!;
+    public List<Pedido> Pedidos { get; set; } = new();
 
-    public Cliente(string nome, string endereco, string telefone)
+
+    public Cliente() { }
+
+    public Cliente(string nome, string telefone, string endereco)
     {
         Nome = nome;
-        Endereco = endereco;
         Telefone = telefone;
+        Endereco = endereco;
     }
 }

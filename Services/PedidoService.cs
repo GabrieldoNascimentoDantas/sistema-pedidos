@@ -1,4 +1,5 @@
 using SistemaPedidos.Models;
+using SistemaPedidos.Data;
 
 namespace SistemaPedidos.Services;
 
@@ -6,15 +7,15 @@ public class PedidoService
 {
     private List<Produto> _cardapio = new()
     {
-        new Produto(1, "Frango Grelhado",    15.00m, "Marmita"),
-        new Produto(2, "Figado Acebolado",     15.00m, "Marmita"),
-        new Produto(3, "Macarrão C/ Carne Moída",  15.00m, "Marmita"),
-        new Produto(4, "Refrigerante 2L",      12.00m, "Bebida"),
-        new Produto(5, "Guaravita",         2.00m, "Bebida"),
-        new Produto(6, "Pavê",        10.00m, "Sobremesa"),
+        new Produto(1, "Frango Grelhado",           15.00m, "Marmita"),
+        new Produto(2, "Figado Acebolado",          15.00m, "Marmita"),
+        new Produto(3, "Macarrão C/ Carne Moída",   15.00m, "Marmita"),
+        new Produto(4, "Refrigerante 2L",           12.00m, "Bebida"),
+        new Produto(5, "Guaravita",                 2.00m, "Bebida"),
+        new Produto(6, "Pavê",                      10.00m, "Sobremesa"),
     };
 
-    private Pedido _pedidoAtual = new() { Id = 1 };
+    private Pedido _pedidoAtual = new();
 
     public void ExibirCardapio()
     {
@@ -37,7 +38,7 @@ public class PedidoService
             return;
         }
 
-        var itemExistente = _pedidoAtual.Itens.FirstOrDefault(i => i.Produto.Id == produtoId);
+        var itemExistente = _pedidoAtual.Itens.FirstOrDefault(i => i.NomeProduto == produto.Nome);
         if (itemExistente != null)
             itemExistente.Quantidade += quantidade;
         else
@@ -58,13 +59,68 @@ public class PedidoService
     {
         Console.WriteLine("\n===== DADOS DO CLIENTE =====");
 
-        string nome = ColetarNome();
         string telefone = ColetarTelefone();
+
+        using var db = new AppDbContext();
+        var clienteExistente = db.Clientes.FirstOrDefault(c => c.Telefone == telefone);
+
+        if (clienteExistente != null)
+        {
+            Console.WriteLine($"\n✔ Cliente encontrado!");
+            Console.WriteLine($"  Nome:     {clienteExistente.Nome}");
+            Console.WriteLine($"  Endereço: {clienteExistente.Endereco}");
+            Console.Write("\nConfirmar dados? (S/N): ");
+            string confirmacao = Console.ReadLine()!.Trim().ToUpper();
+
+            if (confirmacao == "S")
+            {
+                _pedidoAtual.Cliente = clienteExistente;
+                Console.WriteLine("✔ Dados confirmados!");
+                return;
+            }
+        }
+
+        string nome = ColetarNome();
         string endereco = ColetarEndereco();
 
-        _pedidoAtual.Cliente = new Cliente(nome, endereco, telefone);
+        _pedidoAtual.Cliente = new Cliente(nome, telefone, endereco);
         Console.WriteLine("✔ Dados salvos!");
-}
+    }
+
+    public bool FinalizarPedido()
+    {
+        if (_pedidoAtual.Itens.Count == 0)
+        {
+            Console.WriteLine("✘ Adicione pelo menos um item antes de finalizar!");
+            return false;
+        }
+
+        if (_pedidoAtual.Cliente == null)
+        {
+            Console.WriteLine("⚠ Informe os dados do cliente antes de finalizar!\n");
+            ColetarDadosCliente();
+        }
+
+        using var db = new AppDbContext();
+
+        // salva cliente novo se não existir no banco
+        var clienteNoBanco = db.Clientes.FirstOrDefault(c => c.Telefone == _pedidoAtual.Cliente!.Telefone);
+        if (clienteNoBanco == null)
+        {
+            db.Clientes.Add(_pedidoAtual.Cliente!);
+            db.SaveChanges();
+            clienteNoBanco = _pedidoAtual.Cliente;
+        }
+
+        // salva o pedido
+        _pedidoAtual.ClienteId = clienteNoBanco!.Id; 
+        _pedidoAtual.Cliente = clienteNoBanco;
+        db.Pedidos.Add(_pedidoAtual);
+        db.SaveChanges();
+
+        _pedidoAtual.ExibirResumo();
+        return true;
+    }
 
     private string ColetarNome()
     {
@@ -88,7 +144,7 @@ public class PedidoService
                 return telefone;
             Console.WriteLine("✘ Telefone inválido, tente novamente.");
         }
-}
+    }
 
     private string ColetarEndereco()
     {
@@ -101,23 +157,5 @@ public class PedidoService
                 return endereco;
             Console.WriteLine("✘ Endereço muito curto, tente novamente.");
         }
-}
-
-            public bool FinalizarPedido()
-    {
-        if (_pedidoAtual.Itens.Count == 0)
-        {
-            Console.WriteLine("✘ Adicione pelo menos um item antes de finalizar!");
-            return false;
-        }
-
-        if (_pedidoAtual.Cliente == null)
-        {
-            Console.WriteLine("⚠ Informe os dados do cliente antes de finalizar!\n");
-            ColetarDadosCliente();
-        }
-
-        _pedidoAtual.ExibirResumo();
-        return true;
     }
 }
